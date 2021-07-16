@@ -26,9 +26,9 @@ const Welcome = ({ navigation }) => {
 
     if (status !== "granted") {
       Alert.alert(
-        "Permission not granted",
-        "Allow the app to use location service.",
-        [{ text: "OK" }],
+        "İzin verilmedi",
+        "Konumuzunu almak için izin vermeniz gerekmektedir.",
+        [{ text: "Tamam" }],
         { cancelable: false }
       );
     }
@@ -80,10 +80,10 @@ const Welcome = ({ navigation }) => {
         showsUserLocation={true}
          style={{width:"100%",height:350}}
       ></MapView>
-      <View style={styles.contentContainer}>
-        <Text style={styles.title}>What's your address?</Text>
+      <View style={styles.locationTextContainer}>
+           <Text style={styles.text}>{displayCurrentAddress}</Text>
       </View>
-      <Text style={styles.text}>{displayCurrentAddress}</Text>
+      
     </View>
   );
 };
@@ -95,25 +95,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 130,
   },
-  contentContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  image: {
-    width: 150,
-    height: 150,
-    resizeMode: "contain",
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#FD0139",
+
+  locationTextContainer: {
+    justifyContent:"center",
+    alignItems:"center",
+    padding:"5%"
   },
   text: {
-    fontSize: 20,
-    fontWeight: "400",
-    color: "#fff",
+    fontSize: 17,
+    fontWeight: "600",
+    color: "black",
   },
 });
 
