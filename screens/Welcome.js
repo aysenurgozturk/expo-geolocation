@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Image, Alert, Dimensions } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Alert,
+  Dimensions,
+  TouchableOpacity,
+  _ScrollView,
+} from "react-native";
 import * as Location from "expo-location";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import { ScrollView } from "react-native-gesture-handler";
 
 const Welcome = ({ navigation }) => {
   const width = Dimensions.get("screen").width;
   const height = Dimensions.get("screen").height;
   const aspect = width / height;
   const [location, setlocation] = React.useState({ latitude: 0, longitude: 0 });
+  const [adress, setAdress] = React.useState("Konumunuz belirleniyor...");
 
   const [locationServiceEnabled, setLocationServiceEnabled] = useState(false);
   const [displayCurrentAddress, setDisplayCurrentAddress] = useState(
     "Wait, we are fetching you location..."
   );
-  
+
   useEffect(() => {
     CheckIfLocationEnabled();
     GetCurrentLocation();
@@ -37,8 +48,7 @@ const Welcome = ({ navigation }) => {
     console.log(coords);
     if (coords) {
       const { latitude, longitude } = coords;
-      location.latitude = latitude;
-      location.longitude = longitude;
+      setlocation({ latitude: latitude, longitude: longitude });
       let response = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
@@ -46,9 +56,9 @@ const Welcome = ({ navigation }) => {
 
       for (let item of response) {
         console.log(item);
-        let address = `${item.name}, ${item.street}, ${item.postalCode}, ${item.city}`;
+        let address = `Adress :${item.subregion}, ${item.district}, ${item.name}, ${item.postalCode},${item.subregion}/${item.region},\n${item.country}`;
 
-        setDisplayCurrentAddress(address);
+        setAdress(address);
       }
     }
   };
@@ -68,23 +78,37 @@ const Welcome = ({ navigation }) => {
   };
 
   return (
-    <View style={{flex:1,justifyContent:"flex-start"}}>
-      <MapView
-        provider={PROVIDER_GOOGLE}
-        region={{
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0922 * aspect,
-        }}
-        showsUserLocation={true}
-         style={{width:"100%",height:350}}
-      ></MapView>
-      <View style={styles.locationTextContainer}>
-           <Text style={styles.text}>{displayCurrentAddress}</Text>
+    <ScrollView>
+      <View style={{ flex: 1, justifyContent: "flex-start" }}>
+        <MapView
+          provider={PROVIDER_GOOGLE}
+          region={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0922 * aspect,
+          }}
+          showsUserLocation={true}
+          style={{ width: "100%", height: 350 }}
+        ></MapView>
+        <View style={styles.locationTextContainer}>
+          <Text style={styles.text}>{adress}</Text>
+        </View>
+        <TouchableOpacity style={styles.updateLocationButtonContainer}>
+          <Text style={styles.updateLocationButtonText}>Konumumu Güncelle</Text>
+        </TouchableOpacity>
+        <View style={{ borderBottomWidth: 0.5 }}></View>
+        <View style={{ width: "95%", padding: "3%" }}>
+          <Text style={{ color: "black", textAlign: "center" }}>
+            Medline'a iletilen adres şuan bulundugunuz adres değilse{" "}
+            <Text style={{ color: "orange"}}> 444 12 12  </Text>Medline Alarm
+            merkezi tarafından arandığınızda öncelikli olarak bu durumu
+            belirtin.Eğer bu ekran göründükten 2-3 dakika sonra Medline tarafından
+            aranmadıysanız ve acil bir durum yaşıyorsanız derhal  <Text style={{ color: "orange"}}> 444 12 12  </Text> Medline Alarm Merkezini arayınız.
+          </Text>         
+        </View>
       </View>
-      
-    </View>
+    </ScrollView>
   );
 };
 
@@ -97,14 +121,28 @@ const styles = StyleSheet.create({
   },
 
   locationTextContainer: {
-    justifyContent:"center",
-    alignItems:"center",
-    padding:"5%"
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "5%",
   },
   text: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "600",
     color: "black",
+    textAlign: "center",
+  },
+  updateLocationButtonContainer: {
+    backgroundColor: "green",
+    justifyContent: "center",
+    width: "90%",
+    padding: "3%",
+    margin: "5%",
+    borderRadius: 15,
+  },
+  updateLocationButtonText: {
+    fontSize: 16,
+    color: "white",
+    textAlign: "center",
   },
 });
 
