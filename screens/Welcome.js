@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Image,
   Alert,
   Dimensions,
   TouchableOpacity,
@@ -17,18 +16,18 @@ const Welcome = ({ navigation }) => {
   const width = Dimensions.get("screen").width;
   const height = Dimensions.get("screen").height;
   const aspect = width / height;
-  const [location, setlocation] = React.useState({ latitude: 0, longitude: 0 });
+  const [location, setlocation] = React.useState({
+    latitude: 0,
+    longitude: 0,
+    altitudeAccuracy: 0,
+    accuracy: 0,
+    heading: 0,
+    speed: 0,
+  });
   const [adress, setAdress] = React.useState("Konumunuz belirleniyor...");
 
   const [locationServiceEnabled, setLocationServiceEnabled] = useState(false);
-  const [displayCurrentAddress, setDisplayCurrentAddress] = useState(
-    "Wait, we are fetching you location..."
-  );
-
-  useEffect(() => {
-    CheckIfLocationEnabled();
-    GetCurrentLocation();
-  }, []);
+  const [updateLocation, setUpdateLocation] = React.useState(false);
 
   // create the handler method
 
@@ -45,17 +44,31 @@ const Welcome = ({ navigation }) => {
     }
 
     let { coords } = await Location.getCurrentPositionAsync();
-    console.log(coords);
+
     if (coords) {
-      const { latitude, longitude } = coords;
-      setlocation({ latitude: latitude, longitude: longitude });
+      const {
+        latitude,
+        longitude,
+        altitudeAccuracy,
+        accuracy,
+        heading,
+        speed,
+      } = coords;
+      // console.log(latitude, longitude);
+      setlocation({
+        latitude: latitude,
+        longitude: longitude,
+        altitudeAccuracy: altitudeAccuracy,
+        accuracy: accuracy,
+        heading: heading,
+        speed: speed,
+      });
       let response = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
       });
 
       for (let item of response) {
-        console.log(item);
         let address = `Adress :${item.subregion}, ${item.district}, ${item.name}, ${item.postalCode},${item.subregion}/${item.region},\n${item.country}`;
 
         setAdress(address);
@@ -76,6 +89,43 @@ const Welcome = ({ navigation }) => {
       setLocationServiceEnabled(enabled);
     }
   };
+  React.useEffect(() => {
+    CheckIfLocationEnabled();
+    GetCurrentLocation();
+  }, []);
+
+  const upLoc = async () => {
+    await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 10000,
+        distanceInterval: 100,
+      },
+      async (pos) => {
+        if (pos.coords) {
+          setlocation({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            altitudeAccuracy: pos.coords.altitudeAccuracy,
+            accuracy: pos.coords.accuracy,
+            heading: pos.coords.heading,
+            speed: pos.coords.speed,
+          });
+          // latitude ve longtitude değerlerini vererek kullanıcının konumunun 
+          let response = await Location.reverseGeocodeAsync({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
+          for (let item of response) {
+            console.log(item);
+            let address = `Adress :${item.subregion}, ${item.district}, ${item.name}, ${item.postalCode},${item.subregion}/${item.region},\n${item.country}`;
+
+            setAdress(address);
+          }
+        }
+      }
+    );
+  };
 
   return (
     <ScrollView>
@@ -89,23 +139,31 @@ const Welcome = ({ navigation }) => {
             longitudeDelta: 0.0922 * aspect,
           }}
           showsUserLocation={true}
-          style={{ width: "100%", height: 350 }}
+          zoomControlEnabled={true}
+          style={{ width: "100%", height: 350, marginTop: "10%" }}
         ></MapView>
         <View style={styles.locationTextContainer}>
           <Text style={styles.text}>{adress}</Text>
         </View>
-        <TouchableOpacity style={styles.updateLocationButtonContainer}>
+        <TouchableOpacity
+          style={styles.updateLocationButtonContainer}
+          onPress={() => {
+            upLoc();
+          }}
+        >
           <Text style={styles.updateLocationButtonText}>Konumumu Güncelle</Text>
         </TouchableOpacity>
         <View style={{ borderBottomWidth: 0.5 }}></View>
         <View style={{ width: "95%", padding: "3%" }}>
           <Text style={{ color: "black", textAlign: "center" }}>
             Medline'a iletilen adres şuan bulundugunuz adres değilse{" "}
-            <Text style={{ color: "orange"}}> 444 12 12  </Text>Medline Alarm
+            <Text style={{ color: "orange" }}> 444 12 12 </Text>Medline Alarm
             merkezi tarafından arandığınızda öncelikli olarak bu durumu
-            belirtin.Eğer bu ekran göründükten 2-3 dakika sonra Medline tarafından
-            aranmadıysanız ve acil bir durum yaşıyorsanız derhal  <Text style={{ color: "orange"}}> 444 12 12  </Text> Medline Alarm Merkezini arayınız.
-          </Text>         
+            belirtin.Eğer bu ekran göründükten 2-3 dakika sonra Medline
+            tarafından aranmadıysanız ve acil bir durum yaşıyorsanız derhal{" "}
+            <Text style={{ color: "orange" }}> 444 12 12 </Text> Medline Alarm
+            Merkezini arayınız.
+          </Text>
         </View>
       </View>
     </ScrollView>
